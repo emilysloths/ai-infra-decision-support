@@ -1,0 +1,11 @@
+Site: River North
+Document Type: Project context memo
+Region: Urban core
+Policy Focus: emergency communications and hospital adjacency
+Resilience Score: 2
+Cyber Maturity Score: 3
+Cost Efficiency Score: 2
+Implementation Readiness Score: 4
+Strengths: strong fiber connectivity, nearby hospitals, and low latency for public sector services.
+Risks: elevated flood exposure and higher real estate cost.
+Notes: Good fit for latency-sensitive workloads if flood mitigation is addressed.

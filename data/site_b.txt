@@ -1,0 +1,11 @@
+Site: High Desert
+Document Type: Resilience planning brief
+Region: Inland plateau
+Policy Focus: continuity of operations and regional backup capacity
+Resilience Score: 5
+Cyber Maturity Score: 3
+Cost Efficiency Score: 5
+Implementation Readiness Score: 3
+Strengths: low flood risk, lower operating costs, and strong solar generation potential.
+Risks: longer distance to some metro users and limited existing workforce nearby.
+Notes: Good fit for resilient backup infrastructure and long-term energy planning.
