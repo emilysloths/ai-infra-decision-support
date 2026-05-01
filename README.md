@@ -1,37 +1,40 @@
 # AI Infrastructure Planning Assistant
 
-An AI-assisted decision support system for infrastructure planning queries. The project combines retrieval-augmented generation patterns, local semantic search, and a lightweight multi-criteria scoring layer to answer questions using planning and policy context stored in local documents.
+An AI-assisted decision support system for infrastructure planning queries. The project combines retrieval-augmented generation patterns, local semantic search, configurable multi-criteria scoring, and benchmark evaluation to answer questions using local planning and policy documents.
 
 ## Overview
 
 The assistant is designed to:
 
-1. Load planning documents from a local `data/` directory
-2. Split documents into retrievable chunks
-3. Build a local retrieval index
+1. Load planning and policy documents from a local corpus or uploaded files
+2. Split source documents into retrievable chunks with metadata
+3. Build or reuse a local retrieval index
 4. Accept a user question
-5. Retrieve relevant policy and project context
-6. Produce a recommendation, supporting reasoning, and evidence citations
-7. Rank candidate options using a basic multi-criteria decision scorecard
+5. Retrieve the most relevant evidence
+6. Produce a structured recommendation with citations, confidence, and tradeoffs
+7. Rank candidate options using configurable decision criteria
+8. Evaluate answer and retrieval quality with repeatable benchmarks
 
 ## Architecture
 
 The system is organized as a small pipeline:
 
 1. Ingestion
-   Raw text documents are loaded from the local data directory and split into chunks.
+   Documents are loaded from `.txt`, `.md`, `.pdf`, and `.docx` sources. The ingestion layer validates files, captures metadata, and produces chunked retrieval units.
 
 2. Retrieval
-   The assistant indexes chunks for semantic search. When optional dependencies are installed, it uses Sentence Transformers embeddings with Chroma vector search. Otherwise it falls back to TF-IDF with cosine similarity.
+   The assistant supports two retrieval modes:
+   - Sentence Transformers + Chroma for persistent semantic search
+   - TF-IDF + cosine similarity as a lightweight fallback
 
 3. Decision Support
-   Retrieved chunks are parsed for structured planning signals such as resilience, cyber maturity, cost efficiency, and implementation readiness. Those signals are combined with query-aware weighting and retrieval relevance to produce a ranked recommendation.
+   Retrieved evidence is parsed for planning signals such as resilience, cyber maturity, cost efficiency, and implementation readiness. Those signals are combined with configurable base weights, query-sensitive adjustments, and retrieval relevance bonuses.
 
-4. Interfaces
-   The project provides both a command-line interface and a Streamlit UI for interactive use.
+4. Answer Synthesis
+   The final answer includes an executive summary, a recommendation body with citations, a scorecard, tradeoff notes, and a confidence estimate derived from evidence quality.
 
-5. Evaluation
-   Smoke evaluation cases and unit tests validate retrieval behavior and recommendation consistency for milestone 1.
+5. Interfaces
+   The project includes a command-line interface, a Streamlit application, and an evaluation runner for automated validation.
 
 ## Project structure
 
@@ -42,7 +45,9 @@ ai_infra_assistant/
   README.md
   streamlit_app.py
   run_eval.py
+  benchmarks/
   data/
+  docs/
   src/
   tests/
 ```
@@ -51,76 +56,85 @@ ai_infra_assistant/
 
 ### [app.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/app.py)
 
-Command-line entry point. Accepts a planning question and prints:
-
-- recommendation
-- decision scorecard
-- reasoning summary
-- retrieved evidence
+Command-line interface for querying the assistant with configurable retrieval and decision settings.
 
 ### [streamlit_app.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/streamlit_app.py)
 
-Interactive UI for submitting questions and viewing the assistant output in a browser.
+Interactive web interface with:
+
+- document upload
+- backend selection
+- chunking controls
+- weight tuning
+- evidence and comparison views
+- benchmark execution
 
 ### [run_eval.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/run_eval.py)
 
-Runs milestone 1 smoke evaluation cases against the assistant and reports pass/fail results.
+Benchmark runner that evaluates retrieval and recommendation behavior and exports results as JSON or CSV.
+
+### [src/config.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/config.py)
+
+Defines shared retrieval and decision configuration objects.
 
 ### [src/ingest.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/ingest.py)
 
-Loads `.txt` documents and chunks them into retrieval units while preserving source references.
+Loads documents, validates source files, captures metadata, chunks content, and produces ingestion reports.
 
 ### [src/retrieval.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/retrieval.py)
 
-Implements retrieval over the local document collection.
+Builds either:
 
-- Primary path: Sentence Transformers + Chroma
-- Fallback path: TF-IDF + cosine similarity
+- a persistent Chroma collection backed by Sentence Transformers embeddings, or
+- a TF-IDF fallback index
 
-The fallback path keeps the project runnable in environments where embedding dependencies are unavailable.
+It also exposes corpus statistics and supports index reuse through a corpus fingerprint manifest.
 
 ### [src/decision.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/decision.py)
 
-Builds the final recommendation from retrieved context. This layer:
+Ranks candidate sites by combining:
 
-- extracts site-level attributes from retrieved chunks
-- applies weighted scoring across planning criteria
-- adjusts weights based on the question
-- adds retrieval and phrase-match relevance bonuses
-- returns the final recommendation and scorecard
+- configurable planning criteria weights
+- query-sensitive weight adjustments
+- lexical phrase overlap
+- domain-specific evidence bonuses
+- retrieval score contribution
 
-### [src/agent.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/agent.py)
+### [src/synthesis.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/synthesis.py)
 
-Top-level orchestration for the assistant. It connects retrieval and decision support into a single `answer()` flow.
+Builds the final structured answer, including executive summary, citations, tradeoffs, and confidence indicators.
 
 ### [src/evaluate.py](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/src/evaluate.py)
 
-Defines evaluation cases and helper functions for repeatable milestone 1 validation.
+Loads benchmark cases, computes answer and retrieval metrics, summarizes results, and exports reports.
 
 ### [tests](/C:/Users/amyme/OneDrive/Documents/New%20project/ai_infra_assistant/tests)
 
-Contains `unittest`-based smoke tests for retrieval and evaluation behavior.
+Contains ingestion, retrieval, evaluation, and end-to-end validation tests.
 
 ## Technology stack
 
 - Python
 - Sentence Transformers for local embeddings
-- Chroma for vector storage and semantic retrieval
+- Chroma for persistent vector storage and semantic retrieval
 - scikit-learn for TF-IDF fallback retrieval
 - Streamlit for the interactive interface
-- `unittest` for lightweight validation
+- `pypdf` for PDF ingestion
+- `python-docx` for DOCX ingestion
+- `unittest` for regression coverage
 
 ## Why these technologies are used
 
-- Sentence Transformers provides a practical local embedding workflow for semantic similarity without requiring a hosted vectorization service.
-- Chroma offers a simple vector database interface that is easy to integrate for local development and experimentation.
-- TF-IDF fallback retrieval keeps the application usable even when the semantic search stack is not installed.
-- Streamlit provides a fast path to a usable interactive interface without introducing backend/frontend boilerplate.
-- `unittest` keeps milestone 1 validation simple and portable across Python environments.
+- Sentence Transformers provides a local semantic embedding workflow without depending on a hosted embedding service.
+- Chroma supports simple persistent vector search suitable for local experimentation and lightweight deployments.
+- TF-IDF fallback retrieval keeps the assistant usable when the embedding stack is unavailable.
+- Streamlit provides a direct path to an interactive interface with minimal web application overhead.
+- `pypdf` and `python-docx` extend the assistant beyond plain text sources into common planning document formats.
+- `unittest` keeps validation portable across standard Python environments.
 
 ## Data model
 
-The sample documents in `data/` represent site and planning context. Each document can contain:
+The local corpus may include site-level records, planning memoranda, and policy guidance. Documents can provide:
 
 - site name
 - document type
@@ -132,37 +146,67 @@ The sample documents in `data/` represent site and planning context. Each docume
 - implementation readiness score
 - strengths, risks, and notes
 
-These fields are intentionally lightweight so the project can demonstrate retrieval and ranking behavior without requiring a large structured database.
+The assistant keeps this information lightweight on purpose so the same retrieval and decision pipeline can work across both structured site profiles and less structured policy documents.
 
 ## Running the project
 
+Install dependencies:
+
 ```bash
 pip install -r requirements.txt
+```
+
+Run the CLI:
+
+```bash
 python app.py --question "Which site is best for a resilient regional operations center?"
+```
+
+Run the Streamlit app:
+
+```bash
 streamlit run streamlit_app.py
 ```
 
-## Validation
+## Evaluation
 
-Run the milestone 1 checks with:
+Run the benchmark suite:
 
 ```bash
-python run_eval.py
+python run_eval.py --output artifacts/eval_results.json
+```
+
+This produces:
+
+- case-level pass/fail results
+- retrieval precision@k
+- retrieval recall@k
+- summary metrics
+- exportable JSON or CSV reports
+
+## Validation
+
+Run the automated tests with:
+
+```bash
 python -m unittest discover -s tests -v
 ```
 
-## Current limitations
+## Current behavior
 
-- The current data source is a small local text corpus
-- The recommendation layer is rule-based rather than LLM-generated
-- PDF and DOCX ingestion are not implemented yet
-- Persistent vector storage is not configured for production use
-- The scoring model is intentionally simple and designed for milestone 1
+Milestone 2 currently supports:
 
-## Next steps
+- persistent semantic indexing when the embedding stack is available
+- lexical fallback retrieval
+- configurable chunking and top-k retrieval
+- configurable decision weights
+- structured answers with citations and confidence
+- document upload in the Streamlit UI
+- benchmark evaluation and report export
 
-- Add PDF and DOCX ingestion
-- Add a richer answer synthesis layer
-- Expand the evaluation suite with benchmark question sets
-- Support configurable decision weights
-- Persist vector indexes between runs
+## Limitations
+
+- The answer synthesis layer is template-based rather than LLM-generated
+- The current corpus is still small and local
+- Chroma persistence is optimized for local workflows, not distributed deployment
+- Evaluation is benchmark-driven and not yet tied to human annotation workflows

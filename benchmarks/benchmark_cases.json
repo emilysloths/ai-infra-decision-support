@@ -1,0 +1,26 @@
+[
+  {
+    "question": "Which site is the best fit for resilient backup infrastructure?",
+    "expected_keyword": "resilient backup infrastructure",
+    "expected_site": "High Desert",
+    "expected_sources": ["site_b.txt"]
+  },
+  {
+    "question": "Which site has elevated flood exposure?",
+    "expected_keyword": "flood exposure",
+    "expected_site": "River North",
+    "expected_sources": ["site_a.txt"]
+  },
+  {
+    "question": "Which site has the strongest cyber maturity for critical operations?",
+    "expected_keyword": "cyber maturity",
+    "expected_site": "Cascade Junction",
+    "expected_sources": ["site_c.txt"]
+  },
+  {
+    "question": "Which site provides continuity of operations and regional backup capacity?",
+    "expected_keyword": "continuity of operations",
+    "expected_site": "High Desert",
+    "expected_sources": ["site_b.txt"]
+  }
+]

@@ -1,36 +1,47 @@
+"""CLI runner for benchmark evaluation and report export."""
+
+from pathlib import Path
+
 from src.agent import InfrastructureAssistant
-from src.evaluate import EvalCase, run_smoke_eval
+from src.evaluate import export_results, load_eval_cases, run_smoke_eval, summarize_results
 
 
 def main() -> None:
-    agent = InfrastructureAssistant(data_dir="data")
-    cases = [
-        EvalCase(
-            question="Which site is the best fit for resilient backup infrastructure?",
-            expected_keyword="resilient backup infrastructure",
-            expected_site="High Desert",
-        ),
-        EvalCase(
-            question="Which site has elevated flood exposure?",
-            expected_keyword="flood exposure",
-            expected_site="River North",
-        ),
-        EvalCase(
-            question="Which site has the strongest cyber maturity for critical operations?",
-            expected_keyword="cyber maturity",
-            expected_site="Cascade Junction",
-        ),
-    ]
+    import argparse
 
+    parser = argparse.ArgumentParser(description="Run Milestone 2 evaluation benchmarks.")
+    parser.add_argument(
+        "--benchmark-file",
+        default="benchmarks/benchmark_cases.json",
+        help="Path to the JSON benchmark case file.",
+    )
+    parser.add_argument(
+        "--output",
+        default="artifacts/eval_results.json",
+        help="Optional export path (.json or .csv).",
+    )
+    args = parser.parse_args()
+
+    agent = InfrastructureAssistant(data_dir="data")
+    cases = load_eval_cases(Path(args.benchmark_file))
     results = run_smoke_eval(agent, cases)
-    passed = sum(1 for item in results if item["passed"])
+    summary = summarize_results(results)
+    export_results(results, summary, Path(args.output))
 
     print("Evaluation results:")
     for item in results:
         status = "PASS" if item["passed"] else "FAIL"
-        print(f"- {status}: {item['question']}")
+        print(
+            f"- {status}: {item['question']} | "
+            f"precision@k={item['precision_at_k']:.2f} "
+            f"recall@k={item['recall_at_k']:.2f}"
+        )
 
-    print(f"\nScore: {passed}/{len(results)} passed")
+    print("\nSummary:")
+    for key, value in summary.items():
+        print(f"- {key}: {value}")
+
+    print(f"\nExported report: {args.output}")
 
 
 if __name__ == "__main__":
